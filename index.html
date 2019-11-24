@@ -226,16 +226,6 @@
           </a>
         </li>
       
-        
-        <li class="menu-item menu-item-commonweal">
-          <a href="/404.html/" rel="section">
-            
-              <i class="menu-item-icon fa fa-fw fa-heartbeat"></i> <br />
-            
-            Commonweal 404
-          </a>
-        </li>
-      
 
       
     </ul>
@@ -340,36 +330,16 @@
       
         
           
-            <h3 id="TCP-粘包和拆包"><a href="#TCP-粘包和拆包" class="headerlink" title="TCP 粘包和拆包"></a>TCP 粘包和拆包</h3><p>TCP（传输控制协议，英语：Transmission Control Protocol）是一种面向连接的、可靠的、基于字节流的传输层通信协议。</p>
-<h4 id="1-什么是TCP粘包-拆包"><a href="#1-什么是TCP粘包-拆包" class="headerlink" title="1.什么是TCP粘包/拆包"></a>1.什么是TCP粘包/拆包</h4><p>TCP是个基于字节流的协议，所谓流，就是没有界限的一串数据。TCP底层并不了解上层业务数据的具体含义，它会根据TCP缓冲区的实际情况进行包的划分，所以在业务上认为，一个完整的包可能会被TCP拆分成多个包进行发送，也有可能把多个小的包封装成一个大的数据包发送，这就是所谓的TCP粘包和拆包问题。</p>
-<h4 id="2-为什么会发生TCP粘包-拆包"><a href="#2-为什么会发生TCP粘包-拆包" class="headerlink" title="2.为什么会发生TCP粘包/拆包"></a>2.为什么会发生TCP粘包/拆包</h4><p>几个可能的原因:</p>
-<ol>
-<li>要发送的数据大于TCP发送缓存区剩余空间大小，将会发生拆包。</li>
-<li>待发送的数据大于MSS(最大报文长度)，将会发生拆包</li>
-<li>要发送的数据小于TCP发送缓冲区的大小，TCP将多次写入缓冲区的数据一次发送出去，将会发生粘包</li>
-<li>接收数据端的应用层没有及时读取接收缓冲区中的数据，将发生粘包</li>
-</ol>
-<h4 id="3-如何解决拆包-粘包问题"><a href="#3-如何解决拆包-粘包问题" class="headerlink" title="3.如何解决拆包/粘包问题"></a>3.如何解决拆包/粘包问题</h4><p>由于底层的TCP无法理解上层的业务数据，所以在底层是无法保证数据包不被拆分和重组的，这个问题只能通过上层的应用协议栈设计来解决。</p>
-<ol>
-<li>消息定长，例如每个报文的大小为固定长度200字节，如果不够，空位补空格；</li>
-<li>在包尾增加回车换行符进行分割，例如FTP协议；</li>
-<li>将消息分为消息头和消息体，消息头中包含表示消息总长度（或者消息体长度）的字段，通常设计思路为消息头的第一个字段使用int32来表示消息的总长度；</li>
-<li>更复杂的应用层协议。</li>
-</ol>
-<h4 id="4-Netty中具体使用"><a href="#4-Netty中具体使用" class="headerlink" title="4. Netty中具体使用"></a>4. Netty中具体使用</h4><ol>
-<li>FixedLengthFrameDecoder是固定长度解码器，它能够按照指定的长度对消息进行自动解码，开发者不需要考虑TCP的粘包/拆包等问题，非常实用。对于定长消息，如果消息实际长度小于定长，则往往会进行补位操作，它在一定程度上导致了空间和资源的浪费。但是它的优点也是非常明显的，编解码比较简单，因此在实际项目中仍然有一定的应用场景。</li>
-<li>LineBasedFrameDecoder是回车换行解码器，它依次遍历ByteBuf中的可读字节，判断是否有“\n”或“\r\n”，如果有，就以此位置为结束位置，从可读索引到结束位置区间的字节就组成了一行。它是以换行符为结束标志的解码器，支持携带结束符或不携带结束符两种解码方式，同时支持配置单行的最大长度。如果连接读取到最大长度后仍然没有发现换行符，就会抛出异常，同时忽略掉之前读到的异常码流。防止由于数据报没有携带换行符导致接收到 ByteBuf 无限制积压，引起系统内存溢出。</li>
-<li>DelimiterBasedFrameDecoder是分隔符解码器，用户可以指定消息结束的分隔符，它可以自动完成以分隔符作为码流结束标识的消息的解码。回车换行解码器实际上是一种特殊的DelimiterBasedFrameDecoder解码器。</li>
-<li>LengthFieldBasedFrameDecoder解码器，大多数的协议，协议头中会携带长度字段，用于标识消息体或者整包消息的长度，例如SMPP、HTTP协议等。<br>它有4个参数:<ul>
-<li>lengthFieldOffset:指的是长度域的偏移量，表示跳过指定长度个字节之后的才是长度域</li>
-<li>lengthFieldLength：记录该帧数据长度的字段本身的长度</li>
-<li>lengthAdjustment：该字段加长度字段等于数据帧的长度，包体长度调整的大小，长度域的数值表示的长度加上这个修正值表示的就是带header的包</li>
-<li>initialBytesToStrip：从数据帧中跳过的字节数，表示获取完一个完整的数据包之后，忽略前面的指定的位数个字节，应用解码器拿到的就是不带长度域的数据包；</li>
-</ul>
-</li>
-</ol>
-
-          
+          TCP 粘包和拆包TCP（传输控制协议，英语：Transmission Control Protocol）是一种面向连接的、可靠的、基于字节流的传输层通信协议。
+1.什么是TCP粘包/拆包TCP是个基于字节流的协议，所谓流，就是没有界限的一串数据。TCP底层并不了解上层业务数据的具体含义，它会根据T
+          ...
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2019/11/24/TCP%E7%B2%98%E5%8C%85%E5%92%8C%E6%8B%86%E5%8C%85/#more" rel="contents">
+              Read more &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -487,24 +457,16 @@
       
         
           
-            <h3 id="一、图的概念"><a href="#一、图的概念" class="headerlink" title="一、图的概念"></a>一、图的概念</h3><p><strong>图</strong>是由顶点集合和顶点间的二元关系集合组成的数据结构，通常可以用G(V, E)来表示。其中顶点集合和边的集合分别用V(G)和E(G)表示。</p>
-<p><strong>无向边</strong>: 没有方向的边，通常表示为(u,v)，其中u、v分别为这条边的两个顶点，因为与方向无关,所以(u,v)与(v,u)是同一条边。<br><strong>无向图</strong>:所有的边都是无向边的图。<br><strong>完全图</strong>:如果无向图中任何一对顶点之间都有一条边，这种<strong>无向图</strong>称为完全图</p>
-<p><strong>有向边</strong>:有方向的边，通常表示为&lt;u, v&gt;，u表示这条边的起点，v表示这条边的终点。<br><strong>有向图</strong>:所有的边都是有向边的图。<br><strong>有向完全图</strong>：如果有向图中任何一对顶点u 和v，都存在&lt;u, v&gt;和&lt;v, u&gt;两条有向边，这种<strong>有向图</strong>称为有向完全图。</p>
-<p><strong>顶点u的度数</strong>：与顶点u相关联的边的数目<br><strong>顶点u的出度</strong>:是以u 为起始顶点的有向边的数目<br><strong>顶点u的入度</strong>:是以u 为终点的有向边的数目</p>
-<p><strong>路径</strong>:在图G(V, E)中，若从顶点vi 出发，沿着一些边经过一些顶点vp1, vp2, …, vpm，到达顶点vj，则称顶点序列(vi, vp1, vp2,…, vpm, vj)为从顶点vi 到顶点vj 的一条路径（或称为通路）。<br><strong>路径的长度</strong>：路径中边的数目通常称为路径的长度。</p>
-<p><strong>连通图</strong>:从每个顶到到每个其他顶点都存在一条路径的<strong>无向图</strong>.<br><strong>强连通图</strong>:从每个顶到到每个其他顶点都存在一条路径的<strong>有向图</strong>.</p>
-<p><strong>环</strong>:环是一条至少含有一条边且起点和终点相同的路径。<br><strong>无环图</strong>: 一种不包含环的图<br><strong>二分图</strong>:能够将所有节点分为两部分的图，其中图的每条边所连接的两个顶点都分别属于不同的部分。</p>
-<h3 id="二、图的常用表示"><a href="#二、图的常用表示" class="headerlink" title="二、图的常用表示"></a>二、图的常用表示</h3><p><strong>邻接矩阵</strong>:使用一个二维数组，对于每条边(u, v) 置A[u][v] = true; 对于没有的边置A[u][v] = false;<br>如果边有权，可以置A[u][v] = 权值，对于不存在的边可以置为 +∞ (或者-∞，视情景而定). 所需空间复杂度 O (V^2)。</p>
-<p><strong>邻接表</strong>: 对每一个顶点，使用一个表存放所有邻接的顶点。空间复杂度 O( V + E)</p>
-<h3 id="三、图的遍历"><a href="#三、图的遍历" class="headerlink" title="三、图的遍历"></a>三、图的遍历</h3><h4 id="3-2-深度优先搜索"><a href="#3-2-深度优先搜索" class="headerlink" title="3.2 深度优先搜索"></a>3.2 深度优先搜索</h4><p>深度优先搜索算法（英语：Depth-First-Search，DFS）是一种用于遍历或搜索树或图的算法。沿着树的深度遍历树的节点，尽可能深的搜索树的分支。当节点v的所在边都己被探寻过，搜索将回溯到发现节点v的那条边的起始节点。这一过程一直进行到已发现从源节点可达的所有节点为止。如果还存在未被发现的节点，则选择其中一个作为源节点并重复以上过程，整个进程反复进行直到所有节点都被访问为止。</p>
-<h5 id="3-2-1-介绍"><a href="#3-2-1-介绍" class="headerlink" title="3.2.1 介绍"></a>3.2.1 介绍</h5><p>1.首先将根节点放入stack中。<br>2.从stack中取出第一个节点，并检验它是否为目标。<br>    如果找到目标，则结束搜寻并回传结果。<br>    否则将它某一个尚未检验过的直接子节点加入stack中。<br>3.重复步骤2。<br>4.如果不存在未检测过的直接子节点。<br>    将上一级节点加入stack中。<br>    重复步骤2。<br>5.重复步骤4。<br>6.若stack为空，表示整张图都检查过了——亦即图中没有欲搜寻的目标。结束搜寻并回传“找不到目标”。</p>
-<h5 id="3-2-2-实现"><a href="#3-2-2-实现" class="headerlink" title="3.2.2 实现"></a>3.2.2 实现</h5><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">public class DepthFirstSearch &#123;</span><br><span class="line">    // 存储遍历过的顶点</span><br><span class="line">    private boolean[] marked;</span><br><span class="line"></span><br><span class="line">    public DepthFirstSearch(Graph g) &#123;</span><br><span class="line">        marked = new boolean[g.getV()];</span><br><span class="line">        for (int v = 0; v &lt; g.getV(); v++) &#123;</span><br><span class="line">            if (!marked[v]) &#123;</span><br><span class="line">                dfs(g, v);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private void dfs(Graph g, int v) &#123;</span><br><span class="line">        marked[v] = true;</span><br><span class="line">        for (int w : g.adj(v)) &#123;</span><br><span class="line">            if (!marked[w]) &#123;</span><br><span class="line">                dfs(g, w);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h4 id="3-1-广度优先搜索"><a href="#3-1-广度优先搜索" class="headerlink" title="3.1 广度优先搜索"></a>3.1 广度优先搜索</h4><p>广度优先搜索算法（英语：Breadth-First-Search，缩写为BFS），又译作宽度优先搜索，或横向优先搜索，是一种图形搜索算法。简单的说，BFS是从根节点开始，沿着树的宽度遍历树的节点。如果所有节点均被访问，则算法中止。</p>
-<h5 id="3-1-1-介绍"><a href="#3-1-1-介绍" class="headerlink" title="3.1.1 介绍"></a>3.1.1 介绍</h5><p>1.首先将根节点放入队列中。<br>2.从队列中取出第一个节点，并检验它是否为目标。<br>    如果找到目标，则结束搜索并回传结果。<br>    否则将它所有尚未检验过的直接子节点加入队列中。<br>3.若队列为空，表示整张图都检查过了——亦即图中没有欲搜索的目标。结束搜索并回传“找不到目标”。<br>4.重复步骤2。</p>
-<h5 id="3-1-2-实现"><a href="#3-1-2-实现" class="headerlink" title="3.1.2 实现"></a>3.1.2 实现</h5><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">public class BreadthFirstSearch &#123;</span><br><span class="line">    // 存储遍历过的顶点</span><br><span class="line">    private boolean[] marked;</span><br><span class="line"></span><br><span class="line">    public BreadthFirstSearch(Graph g, int v) &#123;</span><br><span class="line">        marked = new boolean[g.getV()];</span><br><span class="line">        bfs(g, v);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private void bfs(Graph g, int s) &#123;</span><br><span class="line">        Queue&lt;Integer&gt; queue = new LinkedList&lt;&gt;();</span><br><span class="line">        marked[s] = true;</span><br><span class="line">        // 入队</span><br><span class="line">        queue.offer(s);</span><br><span class="line">        while (!queue.isEmpty()) &#123;</span><br><span class="line">            // 出队</span><br><span class="line">            int v = queue.poll();</span><br><span class="line">            for (int w : g.adj(v)) &#123;</span><br><span class="line">                if (!marked[w]) &#123;</span><br><span class="line">                    marked[w] = true;</span><br><span class="line">                    queue.offer(w);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-          
+          一、图的概念图是由顶点集合和顶点间的二元关系集合组成的数据结构，通常可以用G(V, E)来表示。其中顶点集合和边的集合分别用V(G)和E(G)表示。
+无向边: 没有方向的边，通常表示为(u,v)，其中u、v分别为这条边的两个顶点，因为与方向无关,所以(u,v)与(v,u)是同一条边。无向图:所有的边
+          ...
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2019/11/10/%E5%9B%BE/#more" rel="contents">
+              Read more &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -622,85 +584,15 @@
       
         
           
-            <h2 id="1-冒泡排序"><a href="#1-冒泡排序" class="headerlink" title="1 冒泡排序"></a>1 冒泡排序</h2><p>冒泡排序（英语：Bubble Sort）又称为泡式排序，是一种简单的排序算法。它重复地走访过要排序的数列，一次比较两个元素，如果他们的顺序错误就把他们交换过来。走访数列的工作是重复地进行直到没有再需要交换，也就是说该数列已经排序完成。这个算法的名字由来是因为越小的元素会经由交换慢慢“浮”到数列的顶端</p>
-<h3 id="1-1-算法描述"><a href="#1-1-算法描述" class="headerlink" title="1.1 算法描述"></a>1.1 算法描述</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">冒泡排序算法的运作如下：</span><br><span class="line"></span><br><span class="line">1.比较相邻的元素。如果第一个比第二个大，就交换他们两个。</span><br><span class="line">2.对每一对相邻元素作同样的工作，从开始第一对到结尾的最后一对。这步做完后，最后的元素会是最大的数。</span><br><span class="line">3.针对所有的元素重复以上的步骤，除了最后一个。</span><br><span class="line">4.持续每次对越来越少的元素重复上面的步骤，直到没有任何一对数字需要比较。</span><br></pre></td></tr></table></figure>
-
-<h3 id="1-2-代码实现"><a href="#1-2-代码实现" class="headerlink" title="1.2 代码实现"></a>1.2 代码实现</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">BubbleSort</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">sort</span><span class="params">(<span class="keyword">int</span>[] array)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">1</span>; i &lt; array.length; i++) &#123;</span><br><span class="line">            <span class="keyword">for</span> (<span class="keyword">int</span> j = array.length - <span class="number">1</span>; j &gt;= i; j--) &#123;</span><br><span class="line">                <span class="keyword">if</span> (array[j] &lt; array[j - <span class="number">1</span>]) &#123;</span><br><span class="line">                    SortUtil.swap(array, j, j - <span class="number">1</span>);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h2 id="2-插入排序"><a href="#2-插入排序" class="headerlink" title="2 插入排序"></a>2 插入排序</h2><p>插入排序（英语：Insertion Sort）是一种简单直观的排序算法。它的工作原理是通过构建有序序列，对于未排序数据，在已排序序列中从后向前扫描，找到相应位置并插入</p>
-<h3 id="2-1-算法描述"><a href="#2-1-算法描述" class="headerlink" title="2.1 算法描述"></a>2.1 算法描述</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">一般来说，插入排序都采用in-place在数组上实现。具体算法描述如下：</span><br><span class="line"></span><br><span class="line">1.从第一个元素开始，该元素可以认为已经被排序</span><br><span class="line">2.取出下一个元素，在已经排序的元素序列中从后向前扫描</span><br><span class="line">3.如果该元素（已排序）大于新元素，将该元素移到下一位置</span><br><span class="line">4.重复步骤3，直到找到已排序的元素小于或者等于新元素的位置</span><br><span class="line">5.将新元素插入到该位置后</span><br><span class="line">6.重复步骤2~5</span><br></pre></td></tr></table></figure>
-<h3 id="2-2-代码实现"><a href="#2-2-代码实现" class="headerlink" title="2.2 代码实现"></a>2.2 代码实现</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">InsertionSort</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">sort</span><span class="params">(<span class="keyword">int</span>[] array)</span> </span>&#123;</span><br><span class="line"><span class="comment">//        for (int i = 1; i &lt; array.length; i++) &#123;</span></span><br><span class="line"><span class="comment">//            for (int j = i; j &gt; 0 &amp;&amp; array[j - 1] &gt; array[j]; j--) &#123;</span></span><br><span class="line"><span class="comment">//                SortUtil.swap(array, j - 1, j);</span></span><br><span class="line"><span class="comment">//            &#125;</span></span><br><span class="line"><span class="comment">//        &#125;</span></span><br><span class="line"></span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">1</span>; i &lt; array.length; i++) &#123;</span><br><span class="line">            <span class="keyword">int</span> temp = array[i];</span><br><span class="line">            <span class="keyword">int</span> j = i - <span class="number">1</span>;</span><br><span class="line">            <span class="keyword">while</span> (j &gt;= <span class="number">0</span> &amp;&amp; array[j] &gt; temp) &#123;</span><br><span class="line">                array[j + <span class="number">1</span>] = array[j];</span><br><span class="line">                j--;</span><br><span class="line">            &#125;</span><br><span class="line">            array[j + <span class="number">1</span>] = temp;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h2 id="3-选择排序"><a href="#3-选择排序" class="headerlink" title="3 选择排序"></a>3 选择排序</h2><p>选择排序（Selection sort）是一种简单直观的排序算法。它的工作原理如下。首先在未排序序列中找到最小（大）元素，存放到排序序列的起始位置，然后，再从剩余未排序元素中继续寻找最小（大）元素，然后放到已排序序列的末尾。以此类推，直到所有元素均排序完毕。</p>
-<h3 id="代码实现"><a href="#代码实现" class="headerlink" title="代码实现"></a>代码实现</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">SelectionSort</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">sort</span><span class="params">(<span class="keyword">int</span>[] array)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; array.length; i++) &#123;</span><br><span class="line">            <span class="keyword">int</span> min = i;</span><br><span class="line">            <span class="keyword">for</span> (<span class="keyword">int</span> j = i + <span class="number">1</span>; j &lt; array.length; j++) &#123;</span><br><span class="line">                <span class="keyword">if</span> (array[j] &lt; array[min]) &#123;</span><br><span class="line">                    min = j;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            SortUtil.swap(array, i, min);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">``` </span><br><span class="line">## 4 归并排序</span><br><span class="line">归并排序是建立在归并操作上的一种有效的排序算法。该算法是采用分治法（Divide and Conquer）的一个非常典型的应用。将已有序的子序列合并，得到完全有序的序列；即先使每个子序列有序，再使子序列段间有序。若将两个有序表合并成一个有序表。</span><br><span class="line">### 4.1 算法描述</span><br><span class="line">```text</span><br><span class="line"><span class="number">1</span>.分解:分解待排序的n个元素的子序列成各具n/<span class="number">2</span>个元素的两个子序列。</span><br><span class="line"><span class="number">2</span>.解决:使用归并排序递归地排序两个子序列</span><br><span class="line"><span class="number">3</span>.合并:合并两个已排序的子序列以产生已排序的答案</span><br></pre></td></tr></table></figure>
-<h3 id="4-2-算法实现"><a href="#4-2-算法实现" class="headerlink" title="4.2 算法实现"></a>4.2 算法实现</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MergeSort</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">sort</span><span class="params">(<span class="keyword">int</span>[] array)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">int</span>[] tempArray = <span class="keyword">new</span> <span class="keyword">int</span>[array.length];</span><br><span class="line">        sort(array, <span class="number">0</span>, array.length - <span class="number">1</span>, tempArray);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">sort</span><span class="params">(<span class="keyword">int</span>[] array, <span class="keyword">int</span> left, <span class="keyword">int</span> right, <span class="keyword">int</span>[] tempArray)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (left &gt;= right) &#123;</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">int</span> mid = (left + right) / <span class="number">2</span>;</span><br><span class="line">        sort(array, left, mid, tempArray);</span><br><span class="line">        sort(array, mid + <span class="number">1</span>, right, tempArray);</span><br><span class="line">        merge(array, left, mid, right, tempArray);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">merge</span><span class="params">(<span class="keyword">int</span>[] array, <span class="keyword">int</span> left, <span class="keyword">int</span> mid, <span class="keyword">int</span> right, <span class="keyword">int</span>[] tempArray)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> k = left; k &lt;= right; k++) &#123;</span><br><span class="line">            tempArray[k] = array[k];</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// i、j分别指向当前两个数组需要比较的元素</span></span><br><span class="line">        <span class="keyword">int</span> i = left;</span><br><span class="line">        <span class="keyword">int</span> j = mid + <span class="number">1</span>;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> k = left; k &lt;= right; k++) &#123;</span><br><span class="line">            <span class="keyword">if</span> (i &gt; mid) &#123;</span><br><span class="line">                array[k] = tempArray[j++];</span><br><span class="line">            &#125; <span class="keyword">else</span> <span class="keyword">if</span> (j &gt; right) &#123;</span><br><span class="line">                array[k] = tempArray[i++];</span><br><span class="line">            &#125; <span class="keyword">else</span> <span class="keyword">if</span> (tempArray[i] &gt; tempArray[j]) &#123;</span><br><span class="line">                array[k] = tempArray[j++];</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                array[k] = tempArray[i++];</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h2 id="5-快速排序"><a href="#5-快速排序" class="headerlink" title="5.快速排序"></a>5.快速排序</h2><p>快速排序使用分治法（Divide and conquer）策略来把一个序列（list）分为较小和较大的2个子序列，然后递归地排序两个子序列。</p>
-<h3 id="5-1-算法描述"><a href="#5-1-算法描述" class="headerlink" title="5.1 算法描述"></a>5.1 算法描述</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">步骤为：</span><br><span class="line">1.挑选基准值：从数列中挑出一个元素，称为“基准”（pivot），</span><br><span class="line">2.分割：重新排序数列，所有比基准值小的元素摆放在基准前面，所有比基准值大的元素摆在基准后面（与基准值相等的数可以到任何一边）。在这个分割结束之后，对基准值的排序就已经完成，</span><br><span class="line">3.递归排序子序列：递归地将小于基准值元素的子序列和大于基准值元素的子序列排序。</span><br></pre></td></tr></table></figure>
-
-<h3 id="5-2-代码实现"><a href="#5-2-代码实现" class="headerlink" title="5.2 代码实现"></a>5.2 代码实现</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">QuickSort</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">sort</span><span class="params">(<span class="keyword">int</span>[] array)</span> </span>&#123;</span><br><span class="line">        sort(array, <span class="number">0</span>, array.length - <span class="number">1</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">sort</span><span class="params">(<span class="keyword">int</span>[] array, <span class="keyword">int</span> left, <span class="keyword">int</span> right)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (left &lt; right) &#123;</span><br><span class="line">            <span class="keyword">int</span> p = partition(array, left, right);</span><br><span class="line">            sort(array, left, p - <span class="number">1</span>);</span><br><span class="line">            sort(array, p + <span class="number">1</span>, right);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 切分数组</span></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">int</span> <span class="title">partition</span><span class="params">(<span class="keyword">int</span>[] array, <span class="keyword">int</span> left, <span class="keyword">int</span> right)</span> </span>&#123;</span><br><span class="line">        <span class="comment">// 左光标，指向当前判定的元素</span></span><br><span class="line">        <span class="keyword">int</span> i = left + <span class="number">1</span>;</span><br><span class="line">        <span class="comment">// 右光标, 指向当前判定的元素</span></span><br><span class="line">        <span class="keyword">int</span> j = right;</span><br><span class="line">        <span class="comment">// 基准元素</span></span><br><span class="line">        <span class="keyword">int</span> pivot = array[left];</span><br><span class="line"></span><br><span class="line">        <span class="keyword">while</span> (<span class="keyword">true</span>) &#123;</span><br><span class="line">            <span class="comment">// 找到一个比元素大的数</span></span><br><span class="line">            <span class="keyword">while</span> (i &lt;= right &amp;&amp; array[i] &lt;= pivot) &#123;</span><br><span class="line">                i++;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="comment">// 找到一个比元素小的数</span></span><br><span class="line">            <span class="keyword">while</span> (j &gt;= left &amp;&amp; array[j] &gt; pivot) &#123;</span><br><span class="line">                j--;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (i &lt; j) &#123;</span><br><span class="line">                SortUtil.swap(array, i, j);</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        SortUtil.swap(array, left, i - <span class="number">1</span>);</span><br><span class="line">        <span class="keyword">return</span> i - <span class="number">1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h2 id="6-希尔排序"><a href="#6-希尔排序" class="headerlink" title="6 希尔排序"></a>6 希尔排序</h2><p>希尔排序（Shellsort），也称递减增量排序算法，是插入排序的一种更高效的改进版本。希尔排序是非稳定排序算法。</p>
-<h3 id="算法描述"><a href="#算法描述" class="headerlink" title="算法描述"></a>算法描述</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">将整个待排序的记录序列分割成为若干子序列分别进行直接插入排序，具体算法描述：</span><br><span class="line">1.选择一个增量序列t1，t2，…，tk，其中ti&gt;tj，tk=1；</span><br><span class="line">1.按增量序列个数k，对序列进行k 趟排序；</span><br><span class="line">3.每趟排序，根据对应的增量ti，将待排序列分割成若干长度为m 的子序列，分别对各子表进行直接插入排序。仅增量因子为1 时，整个序列作为一个表来处理，表长度即为整个序列的长度。</span><br></pre></td></tr></table></figure>
-<h3 id="算法实现"><a href="#算法实现" class="headerlink" title="算法实现"></a>算法实现</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ShellSort</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">sort</span><span class="params">(<span class="keyword">int</span>[] array)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> gap = array.length / <span class="number">2</span>; gap &gt; <span class="number">0</span>; gap = gap / <span class="number">2</span>) &#123;</span><br><span class="line">            <span class="keyword">for</span> (<span class="keyword">int</span> i = gap; i &lt; array.length; i++) &#123;</span><br><span class="line">                <span class="keyword">int</span> temp = array[i];</span><br><span class="line">                <span class="keyword">int</span> j;</span><br><span class="line">                <span class="keyword">for</span> (j = i - gap; j &gt;= <span class="number">0</span> &amp;&amp; temp &lt; array[j]; j = j - gap) &#123;</span><br><span class="line">                    array[j + gap] = array[j];</span><br><span class="line">                &#125;</span><br><span class="line">                array[j + gap] = temp;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h2 id="7-堆排序"><a href="#7-堆排序" class="headerlink" title="7 堆排序"></a>7 堆排序</h2><p>堆排序（英语：Heapsort）是指利用堆这种数据结构所设计的一种排序算法。堆是一个近似完全二叉树的结构，并同时满足堆积的性质：即子节点的键值或索引总是小于（或者大于）它的父节点。</p>
-<h3 id="7-1-算法描述"><a href="#7-1-算法描述" class="headerlink" title="7.1 算法描述"></a>7.1 算法描述</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">堆排序的过程是:</span><br><span class="line">1.创建一个堆H[0..n-1]&#125;</span><br><span class="line">2.堆首（最大值）和堆尾互换</span><br><span class="line">3.把堆的尺寸缩小1，并调用shift_down(0),目的是把新的数组顶端数据调整到相应位置</span><br><span class="line">4.重复步骤2，直到堆的尺寸为1</span><br></pre></td></tr></table></figure>
-
-<h3 id="7-2-算法实现"><a href="#7-2-算法实现" class="headerlink" title="7.2 算法实现"></a>7.2 算法实现</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">HeapSort</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">sort</span><span class="params">(<span class="keyword">int</span>[] array)</span> </span>&#123;</span><br><span class="line">        buildMaxHeap(array);</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = array.length - <span class="number">1</span>; i &gt; <span class="number">0</span>; i--) &#123;</span><br><span class="line">            SortUtil.swap(array, <span class="number">0</span>, i);</span><br><span class="line">            maxHeapify(array, <span class="number">0</span>, i);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">buildMaxHeap</span><span class="params">(<span class="keyword">int</span>[] array)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = array.length / <span class="number">2</span>; i &gt;= <span class="number">0</span>; i--) &#123;</span><br><span class="line">            maxHeapify(array, i, array.length);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">maxHeapify</span><span class="params">(<span class="keyword">int</span>[] array, <span class="keyword">int</span> i, <span class="keyword">int</span> length)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">int</span> left = <span class="number">2</span> * i + <span class="number">1</span>;</span><br><span class="line">        <span class="keyword">int</span> right = left + <span class="number">1</span>;</span><br><span class="line">        <span class="keyword">int</span> max = i;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (left &lt; length &amp;&amp; array[left] &gt; array[max]) &#123;</span><br><span class="line">            max = left;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (right &lt; length &amp;&amp; array[right] &gt; array[max])</span><br><span class="line">        &#123;</span><br><span class="line">            max = right;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (max != i) &#123;</span><br><span class="line">            SortUtil.swap(array, i, max);</span><br><span class="line">            maxHeapify(array, max, length);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><table>
-<thead>
-<tr>
-<th>名称</th>
-<th>稳定性</th>
-<th>时间复杂度</th>
-<th>空间复杂度</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>冒泡排序</td>
-<td>√</td>
-<td>O(n^2)</td>
-<td>O(1)</td>
-</tr>
-<tr>
-<td>选择排序</td>
-<td>×</td>
-<td>O(n^2)</td>
-<td>O(1)</td>
-</tr>
-<tr>
-<td>插入排序</td>
-<td>√</td>
-<td>O(n^2)</td>
-<td>O(1)</td>
-</tr>
-<tr>
-<td>堆排序</td>
-<td>×</td>
-<td>O(nlgn)</td>
-<td>O(1)</td>
-</tr>
-<tr>
-<td>归并排序</td>
-<td>√</td>
-<td>O(nlgn)</td>
-<td>O(n)</td>
-</tr>
-<tr>
-<td>快速排序</td>
-<td>×</td>
-<td>O(nlgn)</td>
-<td>O(1)</td>
-</tr>
-<tr>
-<td>希尔排序</td>
-<td>×</td>
-<td>O(nlgn)</td>
-<td>O(1)</td>
-</tr>
-</tbody></table>
-
-          
+          1 冒泡排序冒泡排序（英语：Bubble Sort）又称为泡式排序，是一种简单的排序算法。它重复地走访过要排序的数列，一次比较两个元素，如果他们的顺序错误就把他们交换过来。走访数列的工作是重复地进行直到没有再需要交换，也就是说该数列已经排序完成。这个算法的名字由来是因为越小的元素会经由交换慢慢“浮”
+          ...
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2019/11/03/%E5%B8%B8%E7%94%A8%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95/#more" rel="contents">
+              Read more &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -818,26 +710,19 @@
       
         
           
-            <h2 id="什么是Hexo"><a href="#什么是Hexo" class="headerlink" title="什么是Hexo?"></a>什么是Hexo?</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Hexo 是一个快速、简洁且高效的博客框架。Hexo 使用 Markdown（或其他渲染引擎）解析文章，在几秒内，即可利用靓丽的主题生成静态网页。</span><br></pre></td></tr></table></figure>
+          什么是Hexo?1Hexo 是一个快速、简洁且高效的博客框架。Hexo 使用 Markdown（或其他渲染引擎）解析文章，在几秒内，即可利用靓丽的主题生成静态网页。
 
-<h2 id="安装前准备"><a href="#安装前准备" class="headerlink" title="安装前准备"></a>安装前准备</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">1. 使用node -v 确认是否安装了Node.js</span><br><span class="line">2. 确认是否安装了Git</span><br></pre></td></tr></table></figure>
+安装前准备1231. 使用node -v 确认是否安装了Node.js2. 确认是否安装了Git
 
-<h2 id="安装Hexo"><a href="#安装Hexo" class="headerlink" title="安装Hexo"></a>安装Hexo</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ npm install -g hexo-cli</span><br></pre></td></tr></table></figure>
-
-<h2 id="初始化项目"><a href="#初始化项目" class="headerlink" title="初始化项目"></a>初始化项目</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ hexo init blog</span><br><span class="line">$ cd blog</span><br></pre></td></tr></table></figure>
-
-<h2 id="如何安装主题"><a href="#如何安装主题" class="headerlink" title="如何安装主题"></a>如何安装主题</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ cd hexo</span><br><span class="line">$ git clone https://github.com/theme-next/hexo-theme-next themes/next</span><br><span class="line">同时在_config.xml 中配置自己的主题即可</span><br></pre></td></tr></table></figure>
-
-<h2 id="新建一篇博客"><a href="#新建一篇博客" class="headerlink" title="新建一篇博客"></a>新建一篇博客</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo new &quot;我的第一遍博客&quot;</span><br></pre></td></tr></table></figure>
-
-<h2 id="发布到github-pages"><a href="#发布到github-pages" class="headerlink" title="发布到github pages"></a>发布到github pages</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">1.在github创建一个repository，名字$username.github.io</span><br><span class="line">2.npm install hexo-deployer-git --save</span><br><span class="line">3.修改 _config.yml，修改deploy下的参数</span><br><span class="line">deploy:</span><br><span class="line">  type: git</span><br><span class="line">  repo: https://github.com/$username/$username.github.io</span><br><span class="line">  branch: master</span><br><span class="line">4.hexo deploy</span><br></pre></td></tr></table></figure>
-<h2 id="访问博客"><a href="#访问博客" class="headerlink" title="访问博客"></a>访问博客</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">访问github pages:https://$username.github.io</span><br><span class="line"></span><br><span class="line">如果想本地访问: $ hexo server, 使用浏览器访问http://127.0.0.1:4000</span><br></pre></td></tr></table></figure>
-
-
-
-
-
-          
+安装Hexo1$ npm ins
+          ...
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2019/10/26/%E5%A6%82%E4%BD%95%E4%BD%BF%E7%94%A8github-pages%E6%90%AD%E5%BB%BA%E8%87%AA%E5%B7%B1%E7%9A%84%E5%8D%9A%E5%AE%A2/#more" rel="contents">
+              Read more &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -955,21 +840,15 @@
       
         
           
-            <p>Welcome to <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/" target="_blank" rel="noopener">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html" target="_blank" rel="noopener">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues" target="_blank" rel="noopener">GitHub</a>.</p>
-<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo new <span class="string">"My New Post"</span></span><br></pre></td></tr></table></figure>
-
-<p>More info: <a href="https://hexo.io/docs/writing.html" target="_blank" rel="noopener">Writing</a></p>
-<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a href="https://hexo.io/docs/server.html" target="_blank" rel="noopener">Server</a></p>
-<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a href="https://hexo.io/docs/generating.html" target="_blank" rel="noopener">Generating</a></p>
-<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a href="https://hexo.io/docs/deployment.html" target="_blank" rel="noopener">Deployment</a></p>
-
-          
+          Welcome to Hexo! This is your very first post. Check documentation for more info. If you get any problems when using Hexo, you can find the answer in 
+          ...
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2019/10/26/hello-world/#more" rel="contents">
+              Read more &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
